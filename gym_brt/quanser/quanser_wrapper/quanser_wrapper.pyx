@@ -380,3 +380,31 @@ cdef class QubeServo2(QuanserWrapper):
             led_w_channels=led_w_channels,
             frequency=frequency
         )
+
+cdef class QubeServo3(QuanserWrapper):
+    def __cinit__(self):
+        board_type = b"qube_servo3_usb"
+        board_identifier = b"0"
+        result = hil.hil_open(board_type, board_identifier, &self.board)
+        print_possible_error(result)
+        if result < 0:
+            raise IOError("Board could not be opened.")
+
+    def __init__(self, frequency=250, max_voltage=24.0):
+        analog_r_channels = [0]
+        analog_w_channels = [0]
+        digital_w_channels = [0]
+        encoder_r_channels = [0, 1]
+        other_r_channels = [14000]
+        led_w_channels = [11000, 11001, 11002]
+
+        super(QubeServo3, self).__init__(
+            max_voltage=max_voltage,
+            analog_r_channels=analog_r_channels,
+            analog_w_channels=analog_w_channels,
+            digital_w_channels=digital_w_channels,
+            encoder_r_channels=encoder_r_channels,
+            other_r_channels=other_r_channels,
+            led_w_channels=led_w_channels,
+            frequency=frequency
+        )
