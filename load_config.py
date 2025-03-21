@@ -1,7 +1,7 @@
 import os
 import yaml
 
-DEFAULT_CONFIG = "qube_servo2_usb"
+DEFAULT_CONFIG = "qube_servo3_usb"
 def load_config(config_path=None):
     """
     Loads the configuration file 'config.yaml' containing the parameters for the selected Quanser Qube.
