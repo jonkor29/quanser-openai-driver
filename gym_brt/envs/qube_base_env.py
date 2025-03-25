@@ -35,6 +35,7 @@ class QubeBaseEnv(gym.Env):
         batch_size=2048,
         use_simulator=False,
         encoder_reset_steps=int(1e8),
+        domain_randomization=False
     ):
         self.observation_space = spaces.Box(-OBS_MAX, OBS_MAX)
         self.action_space = spaces.Box(-ACT_MAX, ACT_MAX)
@@ -59,6 +60,7 @@ class QubeBaseEnv(gym.Env):
                 forward_model="ode",
                 frequency=self._frequency,
                 integration_steps=integration_steps,
+                domain_randomization=domain_randomization,
                 max_voltage=MAX_MOTOR_VOLTAGE,
             )
         else:

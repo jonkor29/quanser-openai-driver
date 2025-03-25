@@ -20,6 +20,8 @@ except ImportError:
 
 from gym_brt.quanser.qube_simulator import forward_model_euler, forward_model_ode
 
+#physical parameters config file
+from load_config import load_config
 
 class QubeHardware(object):
     """Simplify the interface between the environment and """
@@ -139,7 +141,7 @@ class QubeSimulator(object):
     """Simulator that has the same interface as the hardware wrapper."""
 
     def __init__(
-        self, forward_model="ode", frequency=250, integration_steps=1, max_voltage=18.0
+        self, forward_model="ode", frequency=250, integration_steps=1, domain_randomization=False, max_voltage=18.0
     ):
         if isinstance(forward_model, str):
             if forward_model == "ode":
@@ -163,27 +165,50 @@ class QubeSimulator(object):
         self.state = (
             np.array([0, 0, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01
         )
+        self._domain_randomization = domain_randomization
+        self._cfg = load_config()
+        self._physical_params = self._cfg['Rm'], self._cfg['kt'], self._cfg['km'], self._cfg['mr'], self._cfg['Lr'], self._cfg['Dr'], self._cfg['mp'], self._cfg['Lp'], self._cfg['Dp'], self._cfg['g']  
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
         self.close()
+    
+    def _randomize_params(self):
+        self._Rm = self._cfg['Rm'] + np.random.uniform(self._cfg['Rm'] * -0.1, self._cfg['Rm'] * 0.1)
+        self._kt = self._cfg['kt'] + np.random.uniform(self._cfg['kt'] * -0.1, self._cfg['kt'] * 0.1)
+        self._km = self._cfg['km'] + np.random.uniform(self._cfg['km'] * -0.1, self._cfg['km'] * 0.1)
+        self._mr = self._cfg['mr'] + np.random.uniform(self._cfg['mr'] * -0.1, self._cfg['mr'] * 0.1)
+        self._Lr = self._cfg['Lr'] + np.random.uniform(self._cfg['Lr'] * -0.1, self._cfg['Lr'] * 0.1)
+        self._Dr = self._cfg['Dr'] + np.random.uniform(self._cfg['Dr'] * -0.1, self._cfg['Dr'] * 0.1)
+        self._mp = self._cfg['mp'] + np.random.uniform(self._cfg['mp'] * -0.1, self._cfg['mp'] * 0.1)
+        self._Lp = self._cfg['Lp'] + np.random.uniform(self._cfg['Lp'] * -0.1, self._cfg['Lp'] * 0.1)
+        self._Dp = self._cfg['Dp'] + np.random.uniform(self._cfg['Dp'] * -0.1, self._cfg['Dp'] * 0.1)
+        self._g = self._cfg['g'] + np.random.uniform(self._cfg['g'] * -0.1, self._cfg['g'] * 0.1)
+        
+        self._physical_params = self._Rm, self._kt, self._km, self._mr, self._Lr, self._Dr, self._mp, self._Lp, self._Dp, self._g
 
     def step(self, action, led=None):
         action = np.clip(action, -self._max_voltage, self._max_voltage)
         self.state = self._forward_model(
-            *self.state, action, self._dt, self._integration_steps
+            *self.state, action, self._dt, self._integration_steps, self._physical_params
         )
         return self.state
 
     def reset_up(self):
+        if self._domain_randomization:
+            self._randomize_params()
+
         self.state = (
             np.array([0, 0, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01
         )
         return self.state
 
     def reset_down(self):
+        if self._domain_randomization:
+            self._randomize_params()
+            
         self.state = (
             np.array([0, np.pi, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01
         )

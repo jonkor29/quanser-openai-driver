@@ -5,8 +5,10 @@ from __future__ import division
 from scipy.integrate import odeint
 import numpy as np
 import math
+#from load_config import load_config
 
-
+"""
+cfg = load_config()
 # Motor
 Rm = 8.4  # Resistance
 kt = 0.042  # Current-torque (N-m/A)
@@ -24,10 +26,16 @@ Lp = 0.129  # Total length (m)
 Jp = mp * Lp ** 2 / 12  # Moment of inertia about pivot (kg-m^2)
 Dp = 0.00005  # Equivalent viscous damping coefficient (N-m-s/rad)
 
-g = 9.81  # Gravity constant
+g = cfg['g']  # Gravity constant
+"""
+
+def diff_forward_model_ode(state, t, action, dt, physical_params):
+    #load physical parameters
+    Rm, kt, km, mr, Lr, Dr, mp, Lp, Dp, g = physical_params
+    Jr = mr * Lr ** 2 / 12  # Moment of inertia about pivot (kg-m^2)
+    Jp = mp * Lp ** 2 / 12  # Moment of inertia about pivot (kg-m^2)
 
 
-def diff_forward_model_ode(state, t, action, dt):
     theta, alpha, theta_dot, alpha_dot = state
     Vm = action
     tau = -(km * (Vm - km * theta_dot)) / Rm  # torque
@@ -45,11 +53,17 @@ def diff_forward_model_ode(state, t, action, dt):
     return diff_state
 
 
-def forward_model_ode(theta, alpha, theta_dot, alpha_dot, Vm, dt, integration_steps):
+def forward_model_ode(theta, alpha, theta_dot, alpha_dot, Vm, dt, integration_steps, physical_params):
+    #load physical parameters
+    Rm, kt, km, mr, Lr, Dr, mp, Lp, Dp, g = physical_params
+    Jr = mr * Lr ** 2 / 12  # Moment of inertia about pivot (kg-m^2)
+    Jp = mp * Lp ** 2 / 12  # Moment of inertia about pivot (kg-m^2)
+
+
     t = np.linspace(0.0, dt, 2)  # TODO: add and check integration steps here
 
     state = np.array([theta, alpha, theta_dot, alpha_dot])
-    next_state = np.array(odeint(diff_forward_model_ode, state, t, args=(Vm, dt)))[1, :]
+    next_state = np.array(odeint(diff_forward_model_ode, state, t, args=(Vm, dt, physical_params)))[1, :]
     theta, alpha, theta_dot, alpha_dot = next_state
 
     theta = ((theta + np.pi) % (2 * np.pi)) - np.pi
@@ -58,7 +72,12 @@ def forward_model_ode(theta, alpha, theta_dot, alpha_dot, Vm, dt, integration_st
     return theta, alpha, theta_dot, alpha_dot
 
 
-def forward_model_euler(theta, alpha, theta_dot, alpha_dot, Vm, dt, integration_steps):
+def forward_model_euler(theta, alpha, theta_dot, alpha_dot, Vm, dt, integration_steps, physical_params):
+    #load physical parameters
+    Rm, kt, km, mr, Lr, Dr, mp, Lp, Dp, g = physical_params
+    Jr = mr * Lr ** 2 / 12  # Moment of inertia about pivot (kg-m^2)
+    Jp = mp * Lp ** 2 / 12  # Moment of inertia about pivot (kg-m^2)
+
     dt /= integration_steps
     for step in range(integration_steps):
         tau = -(km * (Vm - km * theta_dot)) / Rm  # torque
