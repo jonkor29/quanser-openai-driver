@@ -19,7 +19,7 @@ qube_servo2_usb:
 
 qube_servo3_usb:
   board_type: "qube_servo3_usb"
-  max_voltage: 24.0
+  max_voltage: 3
   # Motor
   Rm: 7.5 # Motor resistance (Ohm)
   kt: 0.042 # Current-torque (N-m/A)
