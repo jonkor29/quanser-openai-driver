@@ -59,6 +59,7 @@ class QubeSwingupEnv(QubeBaseEnv):
         return done
 
     def reset(self):
+        print("QubeSwingupEnv.reset() called")
         super(QubeSwingupEnv, self).reset()
         state = self._reset_down()
         return state
