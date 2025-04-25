@@ -36,6 +36,7 @@ class QubeHardware(object):
         self.qube.__enter__()
 
         self.state = np.array([0, 0, 0, 0], dtype=np.float64)
+        self.last_good_theta_count = 0 #NOTE: part of encoder glitch fix
 
     def __enter__(self):
         return self
@@ -52,7 +53,23 @@ class QubeHardware(object):
         currents, encoders, others = self.qube.action(action, led_w=led)
 
         # Calculate alpha, theta, alpha_dot, and theta_dot
+
+        #calculate theta
         theta = encoders[0] * (-2.0 * np.pi / 2048)
+        #check for glitch in theta encoder
+        MAX_REALISTIC_THETA = 2.0 * np.pi
+        if abs(theta) > MAX_REALISTIC_THETA: #this is not physically possible with the current setup, so the bug is present
+            print(f"theta: {theta} rad, resetting THETA encoder...")
+            self.qube.set_theta_encoder_count(self.last_good_theta_count)  # Reset theta encoder
+            #self.qube.reset_encoders(channels=[0])
+            print("...Theta encoder reset")
+            theta = self.last_good_theta_count * (-2.0 * np.pi / 2048)
+            #theta = 0
+            print(f"new theta after reset: {theta} rad")
+        else:
+            #print(f"theta: {theta} rad, no reset needed")
+            self.last_good_theta_count = encoders[0]
+
         # Alpha without normalizing
         alpha_un = encoders[1] * (2.0 * np.pi / 2048)
         # Normalized and shifted alpha
