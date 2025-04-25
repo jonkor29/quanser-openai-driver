@@ -244,6 +244,20 @@ cdef class QuanserWrapper:
         )
         print_possible_error(result)
 
+    def set_theta_encoder_count(self, count):
+        #Assumes that the first encoder is the theta encoder
+        # Set the encoder count to the given value
+        self.encoder_r_buffer[0] = count
+
+        result = hil.hil_set_encoder_counts(
+            self.board,
+            &self.encoder_r_channels[0],
+            1,
+            &self.encoder_r_buffer[0]
+        )
+        print_possible_error(result)
+
+
     def action(self, voltages_w, led_w=None):
         # If it"s the first time running action, then start the background r/w
         # task
