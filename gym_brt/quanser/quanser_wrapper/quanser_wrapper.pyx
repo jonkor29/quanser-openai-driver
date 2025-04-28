@@ -256,6 +256,19 @@ cdef class QuanserWrapper:
             &self.encoder_r_buffer[0]
         )
         print_possible_error(result)
+    
+    def set_alpha_encoder_count(self, count):
+        #Assumes that the second encoder is the alpha encoder
+        # Set the encoder count to the given value
+        self.encoder_r_buffer[1] = count
+
+        result = hil.hil_set_encoder_counts(
+            self.board,
+            &self.encoder_r_channels[1],
+            1,
+            &self.encoder_r_buffer[1]
+        )
+        print_possible_error(result)
 
 
     def action(self, voltages_w, led_w=None):
