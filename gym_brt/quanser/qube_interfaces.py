@@ -118,18 +118,32 @@ class QubeHardware(object):
         samples_downwards = 0  # Consecutive samples pendulum is stationary
 
         state = self.step([1.0])
+        loop_count = 0
+        max_loop_count = 20000 # 80 seconds
         while True:
-            action = dampen_policy(state)
+            action = np.array([0], dtype=np.float64) #NOTE: use "dampen_policy(state)" for more control, but less fault tolerant
             state = self.step(action)
 
             # Break if pendulum is stationary
             alpha = state[1]
+            print(f"ResetDown Loop {loop_count}: Alpha={alpha*180/np.pi:.2f} deg, SamplesDown={samples_downwards}, Action={action[0]:.2f}")
+            print(f"reset_down alpha: {alpha} rad")
             if abs(alpha) > (178 * np.pi / 180):
                 if samples_downwards > time_hold:
+                    print("ResetDown: Stable downwards, breaking loop.")
                     break
                 samples_downwards += 1
             else:
+                print("ResetDown: Lost stability, resetting samples_downwards.")
                 samples_downwards = 0
+            loop_count += 1
+
+            if loop_count > max_loop_count: # ADD SAFETY BREAK
+                print(f"ERROR: ResetDown loop exceeded {max_loop_count} iterations. Attempting to manually set the alpha encoder to 0.")
+                self.qube.set_alpha_encoder_count(0) #TODO: find out what the alpha encoder is in downward state  # Reset alpha encoder
+                print("...Alpha encoder reset, breaking loop.")
+                break
+
         return state
 
     def reset_encoders(self):
