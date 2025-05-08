@@ -20,7 +20,6 @@ from gym_brt.quanser import QubeSimulator
 from gym_brt.envs.rendering import QubeRenderer
 from load_config import load_config
 
-
 MAX_MOTOR_VOLTAGE = load_config()['max_voltage'] #TODO: make this dynamic based on hardware environment variable
 ACT_MAX = np.asarray([MAX_MOTOR_VOLTAGE], dtype=np.float64)
 # OBS_MAX = [theta, alpha, theta_dot, alpha_dot]
@@ -161,6 +160,14 @@ class QubeBaseEnv(gym.Env):
         self._target_angle = self._next_target_angle()
 
         return state, reward, done, info
+
+    def get_physical_params(self):
+        try:
+            #only available for simulator
+            self.qube.get_physical_params()
+        except AttributeError:
+            raise Warning("get_physical_params() is not available for QubeHardware.")
+        return self.qube.get_physical_params()
 
     def render(self, mode="human"):
         if self._viewer is None:

@@ -24,6 +24,9 @@ from gym_brt.quanser.qube_simulator import forward_model_euler, forward_model_od
 #physical parameters config file
 from load_config import load_config
 
+import warnings
+
+
 class QubeHardware(object):
     """Simplify the interface between the environment and """
 
@@ -188,7 +191,9 @@ class QubeSimulator(object):
         self._cfg = load_config()
         self._physical_params = self._cfg['Rm'], self._cfg['kt'], self._cfg['km'], self._cfg['mr'], self._cfg['Lr'], self._cfg['Dr'], self._cfg['mp'], self._cfg['Lp'], self._cfg['Dp'], self._cfg['g']
 
-
+    def get_physical_params(self):
+        """Get the physical parameters of the simulator."""
+        return self._physical_params
 
     def __enter__(self):
         return self
@@ -208,7 +213,7 @@ class QubeSimulator(object):
             self._mp = max(1e-6, self._p_phi.rvs(size=1)) # + np.random.uniform(self._cfg['mp'] * -0.1, self._cfg['mp'] * 0.1)
         except AttributeError:
             self._mp = self._cfg['mp']# + np.random.uniform(self._cfg['mp'] * -0.1, self._cfg['mp'] * 0.1)
-            raise Warning("p_phi probably not set, using default mp")
+            warnings.warn("p_phi probably not set, using default mp", UserWarning)
         
         self._Lp = self._cfg['Lp']# + np.random.uniform(self._cfg['Lp'] * -0.1, self._cfg['Lp'] * 0.1)
         self._Dp = self._cfg['Dp']# + np.random.uniform(self._cfg['Dp'] * -0.1, self._cfg['Dp'] * 0.1)
