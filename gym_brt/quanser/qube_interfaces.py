@@ -162,7 +162,7 @@ class QubeSimulator(object):
     """Simulator that has the same interface as the hardware wrapper."""
 
     def __init__(
-        self, forward_model="ode", frequency=250, integration_steps=1, domain_randomization=False, p_phi=None, max_voltage=18.0
+        self, forward_model="ode", frequency=250, integration_steps=1, domain_randomization=False, p_phi=None, deterministic_resets=False, max_voltage=18.0
     ):
         if isinstance(forward_model, str):
             if forward_model == "ode":
@@ -184,8 +184,9 @@ class QubeSimulator(object):
         self._integration_steps = integration_steps
         self._max_voltage = max_voltage
         self.state = (
-            np.array([0, 0, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01
+            np.array([0, 0, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01 if not deterministic_resets else np.array([0, 0, 0, 0], dtype=np.float64)
         )
+        self._deterministic_resets = deterministic_resets
         self._domain_randomization = domain_randomization
         self._p_phi = p_phi
         self._cfg = load_config()
@@ -218,7 +219,7 @@ class QubeSimulator(object):
         self._Lp = self._cfg['Lp']# + np.random.uniform(self._cfg['Lp'] * -0.1, self._cfg['Lp'] * 0.1)
         self._Dp = self._cfg['Dp']# + np.random.uniform(self._cfg['Dp'] * -0.1, self._cfg['Dp'] * 0.1)
         self._g = self._cfg['g']# + np.random.uniform(self._cfg['g'] * -0.1, self._cfg['g'] * 0.1)
-        
+        print("QubeSimulator sampled mp: ", self._mp)
         self._physical_params = self._Rm, self._kt, self._km, self._mr, self._Lr, self._Dr, self._mp, self._Lp, self._Dp, self._g
 
     def step(self, action, led=None):
@@ -233,7 +234,7 @@ class QubeSimulator(object):
             self._randomize_params()
 
         self.state = (
-            np.array([0, 0, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01
+            np.array([0, 0, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01 if not self._deterministic_resets else np.array([0, 0, 0, 0], dtype=np.float64)
         )
         return self.state
 
@@ -242,7 +243,7 @@ class QubeSimulator(object):
             self._randomize_params()
             
         self.state = (
-            np.array([0, np.pi, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01
+            np.array([0, np.pi, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01 if not self._deterministic_resets else np.array([0, np.pi, 0, 0], dtype=np.float64)
         )
         return self.state
 
