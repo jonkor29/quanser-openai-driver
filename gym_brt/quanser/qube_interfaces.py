@@ -162,7 +162,7 @@ class QubeSimulator(object):
     """Simulator that has the same interface as the hardware wrapper."""
 
     def __init__(
-        self, forward_model="ode", frequency=250, integration_steps=1, domain_randomization=False, p_phi=None, deterministic_resets=False, max_voltage=18.0
+        self, forward_model="ode", frequency=250, integration_steps=1, domain_randomization=False, p_phi=None, deterministic_resets=False, sim_init_state=np.array([0,0,0,0], dtype=np.float64), max_voltage=18.0
     ):
         if isinstance(forward_model, str):
             if forward_model == "ode":
@@ -184,8 +184,9 @@ class QubeSimulator(object):
         self._integration_steps = integration_steps
         self._max_voltage = max_voltage
         self.state = (
-            np.array([0, 0, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01 if not deterministic_resets else np.array([0, 0, 0, 0], dtype=np.float64)
+            sim_init_state + np.random.randn(4) * 0.01 if not deterministic_resets else sim_init_state
         )
+        self._sim_init_state = sim_init_state
         self._deterministic_resets = deterministic_resets
         self._domain_randomization = domain_randomization
         self._p_phi = p_phi
@@ -234,7 +235,7 @@ class QubeSimulator(object):
             self._randomize_params()
 
         self.state = (
-            np.array([0, 0, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01 if not self._deterministic_resets else np.array([0, 0, 0, 0], dtype=np.float64)
+            self._sim_init_state + np.random.randn(4) * 0.01 if not self._deterministic_resets else self._sim_init_state
         )
         return self.state
 
@@ -243,7 +244,7 @@ class QubeSimulator(object):
             self._randomize_params()
             
         self.state = (
-            np.array([0, np.pi, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01 if not self._deterministic_resets else np.array([0, np.pi, 0, 0], dtype=np.float64)
+            self._sim_init_state + np.random.randn(4) * 0.01 if not self._deterministic_resets else self._sim_init_state
         )
         return self.state
 
