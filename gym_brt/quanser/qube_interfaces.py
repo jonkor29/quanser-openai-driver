@@ -162,7 +162,7 @@ class QubeSimulator(object):
     """Simulator that has the same interface as the hardware wrapper."""
 
     def __init__(
-        self, forward_model="ode", frequency=250, integration_steps=1, domain_randomization=False, p_phi=None, deterministic_resets=False, sim_init_state=np.array([0,0,0,0], dtype=np.float64), max_voltage=18.0
+        self, forward_model="ode", frequency=250, integration_steps=1, domain_randomization=False, p_phi=None, deterministic_resets=False, sim_init_state=np.array([0,np.pi,0,0], dtype=np.float64), max_voltage=18.0
     ):
         if isinstance(forward_model, str):
             if forward_model == "ode":
