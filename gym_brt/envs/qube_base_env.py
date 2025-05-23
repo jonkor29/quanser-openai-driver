@@ -38,7 +38,7 @@ class QubeBaseEnv(gym.Env):
         domain_randomization=False,
         p_phi=None,
         deterministic_resets=False,
-        sim_init_state=np.array([0,0,0,0], dtype=np.float64),
+        sim_init_state=np.array([0,np.pi,0,0], dtype=np.float64),
 
     ):
         self.observation_space = spaces.Box(-OBS_MAX, OBS_MAX)

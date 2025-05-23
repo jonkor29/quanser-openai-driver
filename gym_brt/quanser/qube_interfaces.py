@@ -168,7 +168,7 @@ class QubeSimulator(object):
         domain_randomization=False, 
         p_phi=None, 
         deterministic_resets=False, 
-        sim_init_state=np.array([0,0,0,0], dtype=np.float64),
+        sim_init_state=np.array([0,np.pi,0,0], dtype=np.float64),
         max_voltage=18.0
     ):
         if isinstance(forward_model, str):
