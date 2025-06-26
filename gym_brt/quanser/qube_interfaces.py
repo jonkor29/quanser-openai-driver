@@ -215,10 +215,10 @@ class QubeSimulator(object):
     
     def _randomize_params(self):
         try:
-            self._phyiscal_params = np.maximum(1e-6, self._p_phi.rvs(size=1))
+            self._physical_params = np.maximum(1e-6, self._p_phi.rvs(size=1))
         except AttributeError:
             self._physical_params = np.array((self._cfg['Rm'], self._cfg['kt'], self._cfg['km'], self._cfg['mr'], self._cfg['Lr'], self._cfg['Dr'], self._cfg['mp'], self._cfg['Lp'], self._cfg['Dp'], self._cfg['g']))
-            warnings.warn("p_phi probably not set, using default _phyiscal_params", UserWarning)
+            warnings.warn("p_phi probably not set, using default _physical_params", UserWarning)
 
     def step(self, action, led=None):
         action = np.clip(action, -self._max_voltage, self._max_voltage)
