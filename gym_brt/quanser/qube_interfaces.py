@@ -6,6 +6,7 @@ import gym
 import time
 import math
 import numpy as np
+from scipy.stats import multivariate_normal
 
 from gym import spaces
 from gym.utils import seeding
@@ -22,6 +23,9 @@ from gym_brt.quanser.qube_simulator import forward_model_euler, forward_model_od
 
 #physical parameters config file
 from load_config import load_config
+
+import warnings
+
 
 class QubeHardware(object):
     """Simplify the interface between the environment and """
@@ -158,7 +162,14 @@ class QubeSimulator(object):
     """Simulator that has the same interface as the hardware wrapper."""
 
     def __init__(
-        self, forward_model="ode", frequency=250, integration_steps=1, domain_randomization=False, max_voltage=18.0
+        self, forward_model="ode", 
+        frequency=250, 
+        integration_steps=1, 
+        domain_randomization=False, 
+        p_phi=None, 
+        deterministic_resets=False, 
+        sim_init_state=np.array([0,np.pi,0,0], dtype=np.float64),
+        max_voltage=18.0
     ):
         if isinstance(forward_model, str):
             if forward_model == "ode":
@@ -180,11 +191,21 @@ class QubeSimulator(object):
         self._integration_steps = integration_steps
         self._max_voltage = max_voltage
         self.state = (
-            np.array([0, 0, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01
+            sim_init_state + np.random.randn(4) * 0.01 if not deterministic_resets else sim_init_state
         )
+        self._sim_init_state = sim_init_state
+        self._deterministic_resets = deterministic_resets
         self._domain_randomization = domain_randomization
+        self._p_phi = p_phi
         self._cfg = load_config()
-        self._physical_params = self._cfg['Rm'], self._cfg['kt'], self._cfg['km'], self._cfg['mr'], self._cfg['Lr'], self._cfg['Dr'], self._cfg['mp'], self._cfg['Lp'], self._cfg['Dp'], self._cfg['g']  
+        if p_phi is None:
+            self._physical_params = np.array((self._cfg['Rm'], self._cfg['kt'], self._cfg['km'], self._cfg['mr'], self._cfg['Lr'], self._cfg['Dr'], self._cfg['mp'], self._cfg['Lp'], self._cfg['Dp'], self._cfg['g']))
+        else:
+            self._physical_params = np.maximum(1e-6, self._p_phi.rvs(size=1))
+
+    def get_physical_params(self):
+        """Get the physical parameters of the simulator."""
+        return self._physical_params
 
     def __enter__(self):
         return self
@@ -193,18 +214,11 @@ class QubeSimulator(object):
         self.close()
     
     def _randomize_params(self):
-        self._Rm = self._cfg['Rm'] + np.random.uniform(self._cfg['Rm'] * -0.1, self._cfg['Rm'] * 0.1)
-        self._kt = self._cfg['kt'] + np.random.uniform(self._cfg['kt'] * -0.1, self._cfg['kt'] * 0.1)
-        self._km = self._cfg['km'] + np.random.uniform(self._cfg['km'] * -0.1, self._cfg['km'] * 0.1)
-        self._mr = self._cfg['mr'] + np.random.uniform(self._cfg['mr'] * -0.1, self._cfg['mr'] * 0.1)
-        self._Lr = self._cfg['Lr'] + np.random.uniform(self._cfg['Lr'] * -0.1, self._cfg['Lr'] * 0.1)
-        self._Dr = self._cfg['Dr'] + np.random.uniform(self._cfg['Dr'] * -0.1, self._cfg['Dr'] * 0.1)
-        self._mp = self._cfg['mp'] + np.random.uniform(self._cfg['mp'] * -0.1, self._cfg['mp'] * 0.1)
-        self._Lp = self._cfg['Lp'] + np.random.uniform(self._cfg['Lp'] * -0.1, self._cfg['Lp'] * 0.1)
-        self._Dp = self._cfg['Dp'] + np.random.uniform(self._cfg['Dp'] * -0.1, self._cfg['Dp'] * 0.1)
-        self._g = self._cfg['g'] + np.random.uniform(self._cfg['g'] * -0.1, self._cfg['g'] * 0.1)
-        
-        self._physical_params = self._Rm, self._kt, self._km, self._mr, self._Lr, self._Dr, self._mp, self._Lp, self._Dp, self._g
+        try:
+            self._physical_params = np.maximum(1e-6, self._p_phi.rvs(size=1))
+        except AttributeError:
+            self._physical_params = np.array((self._cfg['Rm'], self._cfg['kt'], self._cfg['km'], self._cfg['mr'], self._cfg['Lr'], self._cfg['Dr'], self._cfg['mp'], self._cfg['Lp'], self._cfg['Dp'], self._cfg['g']))
+            warnings.warn("p_phi probably not set, using default _physical_params", UserWarning)
 
     def step(self, action, led=None):
         action = np.clip(action, -self._max_voltage, self._max_voltage)
@@ -218,7 +232,7 @@ class QubeSimulator(object):
             self._randomize_params()
 
         self.state = (
-            np.array([0, 0, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01
+            self._sim_init_state + np.random.randn(4) * 0.01 if not self._deterministic_resets else self._sim_init_state
         )
         return self.state
 
@@ -227,7 +241,7 @@ class QubeSimulator(object):
             self._randomize_params()
             
         self.state = (
-            np.array([0, np.pi, 0, 0], dtype=np.float64) + np.random.randn(4) * 0.01
+            self._sim_init_state + np.random.randn(4) * 0.01 if not self._deterministic_resets else self._sim_init_state
         )
         return self.state
 
