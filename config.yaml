@@ -34,3 +34,21 @@ qube_servo3_usb:
   Dp: 0.00005  # Equivalent viscous damping coefficient (N-m-s/rad)
   #Environmental Parameters
   g: 9.81  # Gravity (m/s^2)
+
+qube_servo3_usb_wrong_pendulum_mass:
+  board_type: "qube_servo3_usb"
+  max_voltage: 3
+  # Motor
+  Rm: 7.5 # Motor resistance (Ohm)
+  kt: 0.042 # Current-torque (N-m/A)
+  km: 0.042 # Back-emf constant (V-s/rad)
+  # Rotary Arm
+  mr: 0.095 # Mass (kg)
+  Lr: 0.085 # Total Length (m)
+  Dr: 0.00027  # Equivalent viscous damping coefficient (N-m-s/rad)
+  # Pendulum Link
+  mp: 0.048  # Mass (kg)
+  Lp: 0.129  # Total length (m)
+  Dp: 0.00005  # Equivalent viscous damping coefficient (N-m-s/rad)
+  #Environmental Parameters
+  g: 9.81  # Gravity (m/s^2)
